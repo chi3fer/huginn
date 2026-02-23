@@ -1,4 +1,56 @@
 Rails.application.routes.draw do
+  # API namespace with Bearer token authentication
+  namespace :api do
+    resources :agents, only: [:index, :show, :create, :update, :destroy] do
+      member do
+        post :run
+        put :leave_scenario
+        post :reemit_events
+        delete :remove_events
+        delete :memory, action: :destroy_memory
+      end
+
+      collection do
+        put :toggle_visibility
+        post :propagate
+        get :type_details
+        get :event_descriptions
+        post :validate
+        post :complete
+        delete :undefined, action: :destroy_undefined
+      end
+
+      resources :logs, :only => [:index] do
+        collection do
+          delete :clear
+        end
+      end
+
+      resources :events, :only => [:index, :show, :destroy] do
+        member do
+          post :reemit
+        end
+      end
+
+      resources :dry_runs, only: [:index, :create]
+    end
+
+    resources :scenarios, only: [:index, :show, :create, :update, :destroy] do
+      collection do
+        resource :scenario_imports, :only => [:new, :create]
+      end
+
+      member do
+        get :share
+        get :export
+        put :enable_or_disable_all_agents
+      end
+
+      resource :diagram, :only => [:show]
+    end
+  end
+
+  # Regular routes with session auth (for backward compatibility)
   resources :agents do
     member do
       post :run

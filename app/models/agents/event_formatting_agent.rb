@@ -98,11 +98,27 @@ module Agents
     end
 
     def validate_options
-      errors.add(:base,
-                 "instructions and mode need to be present.") unless options['instructions'].present? && options['mode'].present?
+      # Support both instructions hash and template object
+      has_instructions = options['instructions'].present?
+      has_template = options['template'].present?
+
+      if has_instructions && has_template
+        errors.add(:base, "Cannot specify both 'instructions' and 'template'")
+        return
+      end
+
+      unless has_instructions || has_template
+        errors.add(:base, "Either 'instructions' or 'template' must be present")
+        return
+      end
 
       if options['mode'].present? && !options['mode'].to_s.include?('{{') && !%(clean merge).include?(options['mode'].to_s)
         errors.add(:base, "mode must be 'clean' or 'merge'")
+      end
+
+      # Log deprecation warning if using template format
+      if has_template
+        Rails.logger.warn "DEPRECATED: Using 'template' option is deprecated. Use 'instructions' instead."
       end
 
       validate_matchers
@@ -126,11 +142,19 @@ module Agents
     def receive(incoming_events)
       matchers = compiled_matchers
 
+      # Support both instructions hash and template object
+      instructions = if options['template'].present?
+        # Convert template object to instructions hash for backward compatibility
+        options['template']
+      else
+        interpolated['instructions']
+      end
+
       incoming_events.each do |event|
         interpolate_with(event) do
           apply_compiled_matchers(matchers, event) do
             formatted_event = interpolated['mode'].to_s == "merge" ? event.payload.dup : {}
-            formatted_event.merge! interpolated['instructions']
+            formatted_event.merge! instructions
             create_event payload: formatted_event
           end
         end

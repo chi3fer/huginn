@@ -42,16 +42,5 @@ class Scenario < ActiveRecord::Base
     unless agents.all? { |s| s.user == user }
       errors.add(:agents, 'must be owned by you')
     end
-
-  validates_presence_of :schedule, in: Agent::SCHEDULES
-    unless schedule.nil?
-      if Agent::SCHEDULES.include?(schedule.to_s)
-        true
-      else
-        errors.add(:schedule, "is not a valid schedule")
-    end
-
-  def validate_schedule
-    Agent::SCHEDULES.include?(schedule.to_s)
   end
 end

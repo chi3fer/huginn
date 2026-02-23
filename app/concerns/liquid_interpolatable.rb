@@ -226,6 +226,14 @@ module LiquidInterpolatable
       input
     end
 
+    # Extract domain from URL
+    # Returns the domain portion of a URL (e.g., "https://www.example.com/path" -> "www.example.com")
+    def extract_domain(input)
+      input.to_s.sub(%r{https?://([^/]+).*}, '\1').sub(%r{^www\.(.+)}, '\1')
+    rescue StandardError
+      input
+    end
+
     # Escape a string for use in XPath expression
     def to_xpath(string)
       subs = string.to_s.scan(/\G(?:\A\z|[^"]+|[^']+)/).map { |x|

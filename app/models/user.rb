@@ -35,12 +35,19 @@ class User < ActiveRecord::Base
   has_many :scenarios, inverse_of: :user, dependent: :destroy
   has_many :services, -> { by_name('asc') }, dependent: :destroy
 
+  # API token for Bearer authentication
+  has_secure_token :api_token
+
   def available_services
     Service.available_to_user(self).by_name
   end
 
   # Allow users to login via either email or username.
   def self.find_first_by_auth_conditions(warden_conditions)
+    def find_by_api_token(token)
+      find_by(api_token: token)
+    end
+  end
     conditions = warden_conditions.dup
     if login = conditions.delete(:login)
       where(conditions).where(["lower(username) = :value OR lower(email) = :value", { value: login.downcase }]).first

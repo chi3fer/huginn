@@ -70,7 +70,6 @@ Rails.application.routes.draw do
       post :complete
       delete :undefined, action: :destroy_undefined
     end
-    end
 
     resources :logs, :only => [:index] do
       collection do

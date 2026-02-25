@@ -44,16 +44,16 @@ class User < ActiveRecord::Base
 
   # Allow users to login via either email or username.
   def self.find_first_by_auth_conditions(warden_conditions)
-    def find_by_api_token(token)
-      find_by(api_token: token)
-    end
-  end
     conditions = warden_conditions.dup
     if login = conditions.delete(:login)
       where(conditions).where(["lower(username) = :value OR lower(email) = :value", { value: login.downcase }]).first
     else
       where(conditions).first
     end
+  end
+
+  def self.find_by_api_token(token)
+    find_by(api_token: token)
   end
 
   def active?

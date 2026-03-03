@@ -4,6 +4,7 @@ module Api
   class AgentsController < ApiController
     def index
       @agents = current_user.agents.order("agents.id desc")
+      render json: @agents
     end
 
     def show
@@ -15,7 +16,7 @@ module Api
       if @agent.save
         render json: @agent, status: :created
       else
-        render json: @agent.errors, status: :unprocessable_entity
+        render json: { errors: @agent.errors }, status: :unprocessable_entity
       end
     end
 
@@ -25,7 +26,7 @@ module Api
         if @agent.update(agent_params)
           render json: @agent, status: :ok
         else
-          render json: @agent.errors, status: :unprocessable_entity
+          render json: { errors: @agent.errors }, status: :unprocessable_entity
         end
       else
         render json: { error: 'Agent not found' }, status: :not_found

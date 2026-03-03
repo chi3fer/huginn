@@ -1,14 +1,14 @@
 require 'rails_helper'
 
 RSpec.describe Api::ScenariosController, type: :controller do
-  let(:token) { 'secret_api_token_123' }
   let!(:admin) { users(:bob) }
   let!(:scenario) { scenarios(:bob_weather) }
 
   before do
-    ENV['HUGINN_API_TOKEN'] = token
     admin.update!(admin: true) unless admin.admin?
-    request.headers['Authorization'] = "Bearer #{token}"
+    admin.regenerate_api_token if admin.api_token.blank?
+    sign_in admin
+    request.headers['Authorization'] = "Bearer #{admin.api_token}"
   end
 
   describe 'GET #index' do

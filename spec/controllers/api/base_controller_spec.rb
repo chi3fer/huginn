@@ -1,7 +1,7 @@
 require 'rails_helper'
 
 RSpec.describe Api::BaseController, type: :controller do
-  controller do
+  controller(Api::BaseController) do
     def index
       render json: { message: 'success' }
     end
@@ -9,11 +9,15 @@ RSpec.describe Api::BaseController, type: :controller do
 
   describe 'authentication' do
     let(:token) { 'secret_api_token_123' }
-    let!(:admin) { users(:bob) } # Assuming bob is admin in fixtures, or create one
+    let!(:admin) { users(:bob) }
 
     before do
       ENV['HUGINN_API_TOKEN'] = token
       admin.update!(admin: true) unless admin.admin?
+    end
+
+    after do
+      ENV.delete('HUGINN_API_TOKEN')
     end
 
     it 'rejects requests without an Authorization header' do

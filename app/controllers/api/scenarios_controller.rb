@@ -4,6 +4,7 @@ module Api
   class ScenariosController < ApiController
     def index
       @scenarios = current_user.scenarios.order("scenarios.id desc")
+      render json: @scenarios
     end
 
     def show
@@ -15,7 +16,7 @@ module Api
       if @scenario.save
         render json: @scenario, status: :created
       else
-        render json: @scenario.errors, status: :unprocessable_entity
+        render json: { errors: @scenario.errors }, status: :unprocessable_entity
       end
     end
 
@@ -25,7 +26,7 @@ module Api
         if @scenario.update(scenario_params)
           render json: @scenario, status: :ok
         else
-          render json: @scenario.errors, status: :unprocessable_entity
+          render json: { errors: @scenario.errors }, status: :unprocessable_entity
         end
       else
         render json: { error: 'Scenario not found' }, status: :not_found

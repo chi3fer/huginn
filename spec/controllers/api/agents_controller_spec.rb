@@ -1,14 +1,15 @@
 require 'rails_helper'
 
 RSpec.describe Api::AgentsController, type: :controller do
-  let(:token) { 'secret_api_token_123' }
   let!(:admin) { users(:bob) }
   let!(:agent) { agents(:bob_website_agent) }
 
   before do
-    ENV['HUGINN_API_TOKEN'] = token
     admin.update!(admin: true) unless admin.admin?
-    request.headers['Authorization'] = "Bearer #{token}"
+    # Regenerate token if nil (has_secure_token sets it on create but fixtures may not have it)
+    admin.regenerate_api_token if admin.api_token.blank?
+    sign_in admin
+    request.headers['Authorization'] = "Bearer #{admin.api_token}"
   end
 
   describe 'GET #index' do
@@ -39,12 +40,15 @@ RSpec.describe Api::AgentsController, type: :controller do
 
     context 'with invalid params' do
       let(:invalid_params) do
-        { agent: { type: 'InvalidType', name: '' } }
+        # Missing required name field; type is valid but name is blank
+        { agent: { type: 'Agents::ManualEventAgent', name: '' } }
       end
 
       it 'returns unprocessable entity' do
         post :create, params: invalid_params
         expect(response).to have_http_status(:unprocessable_entity)
+        json_response = JSON.parse(response.body)
+        expect(json_response).to have_key('errors')
       end
     end
   end
@@ -65,10 +69,11 @@ RSpec.describe Api::AgentsController, type: :controller do
   end
 
   describe 'POST #run' do
-    it 'enqueues the agent' do
-      expect_any_instance_of(Agent).to receive(:enqueue_worker)
+    it 'executes the agent' do
+      allow_any_instance_of(Agent).to receive(:check)
       post :run, params: { id: agent.id }
-      expect(response).to have_http_status(:ok)
+      expect(response).to have_http_status(:accepted)
+      expect(JSON.parse(response.body)['status']).to eq('Agent executed')
     end
   end
 end

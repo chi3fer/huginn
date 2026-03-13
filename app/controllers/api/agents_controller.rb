@@ -176,9 +176,32 @@ module Api
     private
 
     def agent_params
-      params.require(:agent).permit(:name, :type, :options, :schedule, :disabled, :keep_events_for,
-                                            :source_ids, :receiver_ids, :propagate_immediately,
-                                            :controller_ids, :control_target_ids, :scenario_ids)
+      return {} unless params[:agent]
+
+      permitted = [
+        :memory,
+        :name,
+        :type,
+        :schedule,
+        :disabled,
+        :keep_events_for,
+        :propagate_immediately,
+        :drop_pending_events,
+        :service_id,
+        source_ids: [],
+        receiver_ids: [],
+        scenario_ids: [],
+        controller_ids: [],
+        control_target_ids: [],
+      ]
+
+      if params[:agent].fetch(:options, "").kind_of?(ActionController::Parameters)
+        permitted << { options: {} }
+      else
+        permitted << :options
+      end
+
+      params.require(:agent).permit(permitted)
     end
   end
 end

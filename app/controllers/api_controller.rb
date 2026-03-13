@@ -1,8 +1,8 @@
 # API controller for /api namespace with Bearer token authentication
 # This provides JSON endpoints compatible with Sales Brain proxy integration
 class ApiController < ApplicationController
-  skip_before_action :verify_authenticity_token, only: [:handle_request]
-  skip_before_action :authenticate_user!, only: [:handle_request]
+  skip_before_action :verify_authenticity_token
+  skip_before_action :authenticate_user!
   wrap_parameters false
 
   before_action :authenticate_bearer_token
